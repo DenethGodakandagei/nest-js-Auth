@@ -1,16 +1,28 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { redirect } from "next/navigation";
 
 type Props = {
   params: { id: string };
 };
 
-const ProfilePage = async ({ params }: Props) => {
+const ProfilePage = async (props: Props) => {
+  // ✅ Correct: Destructure inside the function body!
+  const { params } = props;
+
+  // ✅ Now safe to use
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.id !== params.id) {
-    // Redirect to signin if no session or not authorized
-    throw new Error("Unauthorized");
+  console.log("Session:", session);
+  console.log("Route param id:", params.id);
+
+  if (!session || !session.user?.id) {
+    redirect("/api/auth/signin");
+  }
+
+  if (session.user.id.toString() !== params.id) {
+    // It's common for `session.user.id` to be a number, but params.id is a string
+    redirect("/unauthorized");
   }
 
   return (
